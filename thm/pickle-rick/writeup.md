@@ -138,9 +138,45 @@ Going to /Sup3rS3cretPickl3Ingred.txt gives the flag.
 
 # What is the second ingredient in Rick’s potion?
 
+The `ls` from before, quite literally, give us a clue in the form of /clue.txt, it says
+
+> Look around the file system for the other ingredient.
+
+More enumeration? `ls /home` tell us that there is a `rick` user and `ls -p /home/rick` says that there is a file,
+called `second ingredients`, but we can't see it's contents because our user is not root
+
+```
+ls -ll /home/rick
+-rwxrwxrwx 1 root root 13 Feb 10  2019 second ingredients
+```
+
+What if we look around for the programs our user, ubuntu, can execute as sudo? Using `ls -ll /usr/bin` as input, we can see
+that `less` can be run as root. Nice! Maybe that's all that we need. Let's try: `sudo less /home/rick/*`. It works!
+
 # What is the last and final ingredient?
+
+After some time exploring the filesystem and trying to get a reverse shell, a `sudo -ll` was the missing piece
+
+```
+Matching Defaults entries for www-data on ip-10-10-94-166:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on ip-10-10-94-166:
+
+Sudoers entry:
+    RunAsUsers: ALL
+    Options: !authenticate
+    Commands:
+	ALL
+```
+
+This means that our user, `www-data`, can run all commands as sudo without the need to known the sudo password! To get
+the third flag: `sudo less /root/3rd.txt`.
 
 # Lessons Learned
 
 - Run `nmap` with `-T4` to perform faster initial scans. Warning: this may trigger defense mechanisms on the target's side.
 - More words: https://github.com/xajkep/wordlists/tree/master!
+- Use -F or -p flags with the `ls` command to find if the output is a file or a dir.
+- Use `sudo -l` to find what commands can be run as sudo by the current user. `NOPASSWD` means that the executables listed
+  doesn't require a password to run as sudo.
